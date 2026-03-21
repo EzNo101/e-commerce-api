@@ -9,9 +9,12 @@ class Category(Base):
     __tablename__ = "categories"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True, nullable=False)
-    name: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
+    name: Mapped[str] = mapped_column(
+        String(50), unique=True, index=True, nullable=False
+    )
     is_active: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(onupdate=func.now())
 
-    # Procuts -> name of the class which I will create in ORM | category is attribute which I will have in Product
+    # Products -> name of the class which I will create in ORM | category is attribute which I will have in Product
     products = relationship("Product", back_populates="category")
