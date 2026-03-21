@@ -7,14 +7,23 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(min_length=6)
 
+    model_config = ConfigDict(extra="forbid")
+
+
 class UserUpdate(BaseModel):
     username: str | None = Field(default=None, min_length=1, max_length=25)
     email: EmailStr | None = Field(default=None)
     password: str | None = Field(default=None, min_length=6)
 
+    model_config = ConfigDict(extra="forbid")
+
+
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+    model_config = ConfigDict(extra="forbid")
+
 
 class UserResponse(BaseModel):
     id: int
@@ -22,5 +31,7 @@ class UserResponse(BaseModel):
     email: EmailStr
     is_active: bool
     is_admin: bool
+    created_at: datetime
+    updated_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
