@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
-from decimal import Decimal
 
 
 class CartItemAdd(BaseModel):
@@ -20,7 +19,7 @@ class CartItemResponse(BaseModel):
     id: int
     product_id: int
     quantity: int
-    price_at_time: Decimal
+    price_at_time: int
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -30,7 +29,7 @@ class CartResponse(BaseModel):
     id: int
     user_id: int
     items: list[CartItemResponse]
-    total: Decimal
+    total: int
     created_at: datetime
     updated_at: datetime | None = None
 

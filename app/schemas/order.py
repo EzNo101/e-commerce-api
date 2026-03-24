@@ -1,6 +1,5 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
-from decimal import Decimal
 
 from app.models.order import OrderStatus, PaymentStatus
 
@@ -17,7 +16,7 @@ class OrderItemResponse(BaseModel):
     order_id: int
     product_id: int
     quantity: int
-    price_at_time: Decimal
+    price_at_time: int
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -29,7 +28,7 @@ class OrderResponse(BaseModel):
     user_id: int
     order_status: OrderStatus
     payment_status: PaymentStatus
-    total_amount: Decimal
+    total_amount: int
     stripe_payment_intent_id: str | None = None
     items: list[OrderItemResponse]
     created_at: datetime

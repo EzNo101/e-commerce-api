@@ -1,11 +1,11 @@
-from sqlalchemy import String, func
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from datetime import datetime
 
 from app.db.base import Base
+from app.models.mixins import CreatedAtMixin, UpdatedAtMixin
 
 
-class Category(Base):
+class Category(Base, CreatedAtMixin, UpdatedAtMixin):
     __tablename__ = "categories"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True, nullable=False)
@@ -13,8 +13,6 @@ class Category(Base):
         String(50), unique=True, index=True, nullable=False
     )
     is_active: Mapped[bool] = mapped_column(default=True)
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(onupdate=func.now())
 
     # Products -> name of the class which I will create in ORM | category is attribute which I will have in Product
     products = relationship("Product", back_populates="category")

@@ -1,11 +1,11 @@
-from sqlalchemy import String, func
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from datetime import datetime
 
 from app.db.base import Base
+from app.models.mixins import CreatedAtMixin, UpdatedAtMixin
 
 
-class User(Base):
+class User(Base, CreatedAtMixin, UpdatedAtMixin):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True, nullable=False)
@@ -18,8 +18,6 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(default=True)
     is_admin: Mapped[bool] = mapped_column(default=False)
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(onupdate=func.now())
 
     cart = relationship("Cart", back_populates="user", uselist=False)
     orders = relationship("Order", back_populates="user")
