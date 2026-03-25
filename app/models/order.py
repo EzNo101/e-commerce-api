@@ -48,6 +48,7 @@ class Order(Base, CreatedAtMixin, UpdatedAtMixin):
         nullable=False,
     )
     total_amount: Mapped[int] = mapped_column(nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)
     stripe_payment_intent_id: Mapped[str | None] = mapped_column(
         String(255), unique=True, nullable=True, index=True
     )
