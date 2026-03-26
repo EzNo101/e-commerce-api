@@ -4,14 +4,16 @@ from typing import Literal
 
 class TokenResponse(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: Literal["bearer"] = "bearer"
     expires_in: int  # seconds
+    refresh_expires_in: int
 
     model_config = ConfigDict(extra="forbid")
 
 
 class TokenPayload(BaseModel):
-    sub: str  # usesr id or user email (better user id)
+    sub: str  # user id or user email (better user id)
     exp: int  # unix timestamp,  when token expire
     iat: int  # time when token created (for diagnostic etc.)
     jti: str | None = (
