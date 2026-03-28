@@ -17,7 +17,7 @@ class TokenPayload(BaseModel):
     exp: int  # unix timestamp,  when token expire
     iat: int  # time when token created (for diagnostic etc.)
     jti: str | None = (
-        None  # unique id for token (revoke/blacklist in Reids, logout all sessions)
+        None  # unique id for token (revoke/blacklist in Redis, logout all sessions)
     )
     typ: Literal["access", "refresh"]
 
