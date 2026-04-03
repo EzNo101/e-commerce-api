@@ -26,3 +26,7 @@ htmlcov/
 
 # Editor settings
 .vscode/
+
+# Alembic cache
+alembic/versions/__pycache__/
+alembic/__pycache__/
