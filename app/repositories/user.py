@@ -16,6 +16,16 @@ class UserRepository:
         result = await self.session.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
 
+    async def exists_by_email(self, email: str) -> bool:
+        result = await self.session.execute(select(exists().where(User.email == email)))
+        return result.scalar_one()
+
+    async def exists_by_username(self, username: str):
+        result = await self.session.execute(
+            select(exists().where(User.username == username))
+        )
+        return result.scalar_one()
+
     async def exists_by_email_or_username(self, email: str, username: str) -> bool:
         result = await self.session.execute(
             select(exists().where(or_(User.email == email, User.username == username)))
@@ -45,6 +55,10 @@ class UserRepository:
         for field, value in updates.items():
             setattr(user, field, value)
 
+        return user
+
+    async def change_password(self, user: User, new_password_hash: str) -> User:
+        user.hashed_password = new_password_hash
         return user
 
     async def delete_user(self, user: User) -> None:

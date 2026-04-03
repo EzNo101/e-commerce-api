@@ -13,7 +13,13 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     username: str | None = Field(default=None, min_length=1, max_length=25)
     email: EmailStr | None = Field(default=None)
-    password: str | None = Field(default=None, min_length=6)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(min_length=6)
+    new_password: str = Field(min_length=6)
 
     model_config = ConfigDict(extra="forbid")
 
