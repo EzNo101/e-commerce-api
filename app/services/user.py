@@ -3,6 +3,12 @@ from app.repositories.user import UserRepository
 from app.models.user import User
 from app.schemas.user import UserUpdate, ChangePasswordRequest
 from app.core.security import get_password_hash, verify_password
+from app.core.errors import (
+    UserNotFoundError,
+    UsernameAlreadyUsedError,
+    EmailAlreadyUsedError,
+    InvalidPasswordError,
+)
 
 
 class UserService:
@@ -11,7 +17,7 @@ class UserService:
 
         user = await repo.get_by_id(user_id)
         if user is None:
-            raise ValueError("User not found")
+            raise UserNotFoundError("User not found")
 
         return user
 
@@ -20,7 +26,7 @@ class UserService:
 
         user = await repo.get_by_email(email)
         if not user:
-            raise ValueError("User not found")
+            raise UserNotFoundError("User not found")
 
         return user
 
@@ -37,11 +43,11 @@ class UserService:
         if "email" in updates and user.email != updates["email"]:
             email_exists = await repo.exists_by_email(updates["email"])
             if email_exists:
-                raise ValueError("Email already in use")
+                raise EmailAlreadyUsedError("Email already in use")
         if "username" in updates and user.username != updates["username"]:
             username_exists = await repo.exists_by_username(updates["username"])
             if username_exists:
-                raise ValueError("Username already in use")
+                raise UsernameAlreadyUsedError("Username already in use")
 
         user = await repo.update_user(user, updates)
         await uow.commit()
@@ -55,10 +61,12 @@ class UserService:
         repo = UserRepository(uow.session)
 
         if not verify_password(data.current_password, user.hashed_password):
-            raise ValueError("Invalid password")
+            raise InvalidPasswordError("Invalid password")
 
         if verify_password(data.new_password, user.hashed_password):
-            raise ValueError("New password must be different from current password")
+            raise InvalidPasswordError(
+                "New password must be different from current password"
+            )
 
         new_password_hash = get_password_hash(data.new_password)
 

@@ -6,6 +6,7 @@ from passlib.context import CryptContext  # password manager for hashing
 
 from app.core.config import settings
 from app.schemas.auth import TokenPayload
+from app.core.errors import InvalidTokenTypeError, InvalidTokenError
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -66,10 +67,10 @@ def decode_token(token: str) -> TokenPayload:
         )
         return TokenPayload(**payload)
     except JWTError as e:
-        raise ValueError("Invalid or expired token") from e
+        raise InvalidTokenError("Invalid or expired token") from e
 
 
 # refresh cannot be access and access cannot be refresh
 def ensure_token_type(payload: TokenPayload, expected_type: str) -> None:
     if payload.typ != expected_type:
-        raise ValueError(f"Invalid token type: expected {expected_type}")
+        raise InvalidTokenTypeError(f"Invalid token type: expected {expected_type}")

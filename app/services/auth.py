@@ -24,6 +24,13 @@ from app.core.security import (
     decode_token,
     ensure_token_type,
 )
+from app.core.errors import (
+    EmailAlreadyUsedError,
+    InvalidTokenError,
+    InvalidPasswordError,
+    UserNotFoundError,
+    UserIsNotActiveError,
+)
 
 
 class AuthService:
@@ -62,7 +69,7 @@ class AuthService:
         repo = UserRepository(uow.session)
         exists = await repo.exists_by_email_or_username(data.email, data.username)
         if exists:
-            raise ValueError("Username or Email already exists")
+            raise EmailAlreadyUsedError("Username or Email already exists")
         hashed_password = get_password_hash(data.password)
         user = await repo.create_user(
             username=data.username,
@@ -81,12 +88,12 @@ class AuthService:
         repo = UserRepository(uow.session)
         user = await repo.get_by_email(data.email)
         if user is None:
-            raise ValueError("Invalid email or password")
+            raise InvalidPasswordError("Invalid email or password")
         verify = verify_password(data.password, user.hashed_password)
         if not verify:
-            raise ValueError("Invalid email or password")
+            raise InvalidPasswordError("Invalid email or password")
         if not user.is_active:
-            raise ValueError("User is inactive")
+            raise UserIsNotActiveError("User is inactive")
 
         return await self._build_token_response(redis_client, user.id)
 
@@ -97,19 +104,19 @@ class AuthService:
         ensure_token_type(payload, "refresh")
 
         if payload.jti is None:
-            raise ValueError("Refresh token missing jti")
+            raise InvalidTokenError("Refresh token missing jti")
 
         stored_user_id = await get_refresh_token_owner(redis_client, payload.jti)
         if stored_user_id is None:
-            raise ValueError("Refresh token is invalid or already used")
+            raise InvalidTokenError("Refresh token is invalid or already used")
         if stored_user_id != payload.sub:
-            raise ValueError("Token mismatch")
+            raise InvalidTokenError("Token mismatch")
         repo = UserRepository(uow.session)
         user = await repo.get_by_id(int(payload.sub))
         if user is None:
-            raise ValueError("User not found")
+            raise UserNotFoundError("User not found")
         if not user.is_active:
-            raise ValueError("User is inactive")
+            raise UserIsNotActiveError("User is inactive")
 
         await delete_refresh_token(redis_client, payload.jti)
         new_jti = str(uuid4())
@@ -138,6 +145,6 @@ class AuthService:
         ensure_token_type(payload, "refresh")
 
         if payload.jti is None:
-            raise ValueError("Refresh token missing jti")
+            raise InvalidTokenError("Refresh token missing jti")
 
         await delete_refresh_token(redis_client, payload.jti)

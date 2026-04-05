@@ -8,6 +8,14 @@ from app.services.auth import AuthService
 from app.schemas.auth import RefreshTokenRequest
 from app.schemas.user import UserCreate, UserLogin
 from app.utils.cookies import set_auth_cookies, clear_auth_cookies
+from app.core.errors import (
+    InvalidTokenError,
+    InvalidTokenTypeError,
+    InvalidPasswordError,
+    EmailAlreadyUsedError,
+    UserIsNotActiveError,
+    UserNotFoundError,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 auth_service = AuthService()
@@ -22,8 +30,8 @@ async def register(
 ):
     try:
         tokens = await auth_service.register(data, redis_client, uow)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except EmailAlreadyUsedError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
     set_auth_cookies(
         response=response,
@@ -43,8 +51,10 @@ async def login(
 ):
     try:
         tokens = await auth_service.login(data, redis_client, uow)
-    except ValueError as e:
+    except InvalidPasswordError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+    except UserIsNotActiveError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
 
     set_auth_cookies(
         response=response,
@@ -70,8 +80,11 @@ async def refresh(
         tokens = await auth_service.refresh(
             RefreshTokenRequest(refresh_token=refresh_token), redis_client, uow
         )
-    except ValueError as e:
+    except (InvalidTokenError, UserNotFoundError, InvalidTokenTypeError) as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+    except UserIsNotActiveError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+
     if tokens.refresh_token is None or tokens.refresh_expires_in is None:
         clear_auth_cookies(response)
         raise HTTPException(
@@ -99,6 +112,8 @@ async def logout(
             await auth_service.logout(
                 RefreshTokenRequest(refresh_token=refresh_token), redis_client
             )
+    except (InvalidTokenError, InvalidTokenTypeError) as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
     finally:
         clear_auth_cookies(response)
 
