@@ -28,3 +28,15 @@ class InvalidTokenError(AppError):
 
 class InvalidTokenTypeError(AppError):
     pass
+
+
+class ProductNotFoundError(AppError):
+    pass
+
+
+class ProductQuantityError(AppError):
+    pass
+
+
+class ProductNotInCart(AppError):
+    pass
