@@ -40,3 +40,11 @@ class ProductQuantityError(AppError):
 
 class ProductNotInCart(AppError):
     pass
+
+
+class ProductAlreadyExistsError(AppError):
+    pass
+
+
+class ProductCreateError(AppError):
+    pass
