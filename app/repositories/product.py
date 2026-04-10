@@ -9,6 +9,16 @@ class ProductRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
+    async def get_all(self, limit: int, offset: int) -> list[Product]:
+        result = await self.session.execute(
+            select(Product)
+            .order_by(Product.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+
+        return list(result.scalars().all())
+
     async def get_by_id(self, product_id: int) -> Product | None:
         return await self.session.get(Product, product_id)
 
@@ -27,7 +37,7 @@ class ProductRepository:
     async def create_product(
         self,
         name: str,
-        description: str,
+        description: str | None,
         quantity: int,
         price: int,
         category_id: int,
