@@ -72,8 +72,8 @@ class ProductService:
         if not updates:
             return product
 
-        if "name" in updates and updates["name"] == product.name:
-            existing_product = await repo.get_by_name(product.name)
+        if "name" in updates and updates["name"] != product.name:
+            existing_product = await repo.get_by_name(updates["name"])
             if existing_product:
                 raise ProductAlreadyExistsError("Product name already exists")
 
@@ -91,3 +91,4 @@ class ProductService:
             raise ProductNotFoundError("Product not found")
 
         await repo.delete_product(product)
+        await uow.commit()
