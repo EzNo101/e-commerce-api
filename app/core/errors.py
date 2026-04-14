@@ -48,3 +48,15 @@ class ProductAlreadyExistsError(AppError):
 
 class ProductCreateError(AppError):
     pass
+
+
+class CategoryNotFoundError(AppError):
+    pass
+
+
+class CategoryAlreadyExistsError(AppError):
+    pass
+
+
+class CategoryCreateError(AppError):
+    pass
