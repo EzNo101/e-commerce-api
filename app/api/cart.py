@@ -39,7 +39,7 @@ def _to_cart_response(cart: Cart | None, user_id: int) -> CartResponse:
     )
 
 
-@router.get("", response_model=CartResponse, status_code=status.HTTP_200_OK)
+@router.get("/", response_model=CartResponse, status_code=status.HTTP_200_OK)
 async def get_my_cart(
     current_user: User = Depends(get_current_active_user),
     uow: UnitOfWork = Depends(get_uow),
