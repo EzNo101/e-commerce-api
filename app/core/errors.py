@@ -60,3 +60,19 @@ class CategoryAlreadyExistsError(AppError):
 
 class CategoryCreateError(AppError):
     pass
+
+
+class OrderEmptyCartError(AppError):
+    pass
+
+
+class OrderCheckoutError(AppError):
+    pass
+
+
+class OrderNotFoundError(AppError):
+    pass
+
+
+class OrderAccessDeniedError(AppError):
+    pass

@@ -17,5 +17,6 @@ dependencies = [
     "python-jose>=3.5.0",
     "redis>=7.3.0",
     "sqlalchemy>=2.0.48",
+    "stripe>=15.0.1",
     "uvicorn>=0.42.0",
 ]

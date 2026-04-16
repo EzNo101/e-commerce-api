@@ -51,6 +51,7 @@ class OrderRepository:
         cart: Cart,
         order_number: str,
         total_amount: int,
+        currency: str,
         order_status: OrderStatus = OrderStatus.PENDING,
         payment_status: PaymentStatus = PaymentStatus.PENDING,
     ) -> Order:
@@ -60,6 +61,7 @@ class OrderRepository:
             total_amount=total_amount,
             order_status=order_status,
             payment_status=payment_status,
+            currency=currency,
         )
         self.session.add(order)
         await self.session.flush()
@@ -80,6 +82,7 @@ class OrderRepository:
         order_number: str,
         user_id: int,
         total_amount: int,
+        currency: str,
         order_status: OrderStatus = OrderStatus.PENDING,
         payment_status: PaymentStatus = PaymentStatus.PENDING,
     ) -> Order:
@@ -89,6 +92,7 @@ class OrderRepository:
             total_amount=total_amount,
             order_status=order_status,
             payment_status=payment_status,
+            currency=currency,
         )
 
         self.session.add(order)

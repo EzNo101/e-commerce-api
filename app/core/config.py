@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     # External services
     STRIPE_SECRET_KEY: str
     STRIPE_PUBLISHABLE_KEY: str
+    STRIPE_WEBHOOK_SECRET: str
 
     # Cache
     REDIS_URL: str
