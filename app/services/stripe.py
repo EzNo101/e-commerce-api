@@ -12,3 +12,21 @@ class StripeService:
             sig_header=signature,
             secret=settings.STRIPE_WEBHOOK_SECRET,
         )
+
+    def create_payment_intent(
+        self,
+        amount: int,
+        currency: str,
+        order_id: int,
+        idempotency_key: str,
+    ) -> stripe.PaymentIntent:
+        return stripe.PaymentIntent.create(
+            amount=amount,
+            currency=currency,
+            metadata={"order_id": str(order_id)},
+            automatic_payment_methods={
+                "enabled": True,
+                "allow_redirects": "never",
+            },
+            idempotency_key=idempotency_key,
+        )

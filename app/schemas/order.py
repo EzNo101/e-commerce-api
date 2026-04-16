@@ -43,3 +43,10 @@ class OrderStatusUpdate(BaseModel):
     payment_status: PaymentStatus | None = None
 
     model_config = ConfigDict(extra="forbid")
+
+
+class CheckoutResponse(BaseModel):
+    order: OrderResponse
+    client_secret: str
+
+    model_config = ConfigDict(from_attributes=True)

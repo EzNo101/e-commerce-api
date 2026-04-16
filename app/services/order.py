@@ -1,8 +1,11 @@
+from stripe._error import StripeError
 from uuid import uuid4
 from sqlalchemy.exc import SQLAlchemyError
+from typing import Any
 
 from app.repositories.order import OrderRepository
 from app.repositories.cart import CartRepository
+from app.services.stripe import StripeService
 from app.models.order import Order, OrderStatus, PaymentStatus
 from app.models.cart import Cart
 from app.db.uow import UnitOfWork
@@ -26,9 +29,10 @@ class OrderService:
         user_id: int,
         uow: UnitOfWork,
         currency: str = "USD",
-    ) -> Order:
+    ) -> dict[str, Any]:
         cart_repo = CartRepository(uow.session)
         order_repo = OrderRepository(uow.session)
+        stripe_service = StripeService()
 
         cart = await cart_repo.get_by_user_id(user_id)
         if cart is None or not cart.items:
@@ -44,15 +48,27 @@ class OrderService:
                 total_amount=total_amount,
                 currency=currency,
             )
+            intent = stripe_service.create_payment_intent(
+                amount=total_amount,
+                currency=currency.lower(),  # Stripe waits for lower register ISO code
+                order_id=order.id,
+                idempotency_key=f"checkout-{order_number}",
+            )
+            await order_repo.set_payment_intent_id(order, intent.id)
             await cart_repo.clear_cart(cart)
             await uow.commit()
 
             hydrated_order = await order_repo.get_by_id(order.id)
             if hydrated_order is None:
                 raise OrderCheckoutError("Order created but could not be loaded")
-            return hydrated_order
 
-        except SQLAlchemyError as e:
+            client_secret = intent.client_secret
+            if not isinstance(client_secret, str):
+                raise OrderCheckoutError("PaymentIntent has no client_secret")
+
+            return {"order": hydrated_order, "client_secret": client_secret}
+
+        except (SQLAlchemyError, StripeError) as e:
             await uow.rollback()
             raise OrderCheckoutError("Could not checkout") from e
 

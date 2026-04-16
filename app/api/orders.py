@@ -5,7 +5,7 @@ from stripe import SignatureVerificationError
 
 from app.services.order import OrderService
 from app.services.stripe import StripeService
-from app.schemas.order import OrderResponse
+from app.schemas.order import CheckoutResponse, OrderResponse
 from app.models.user import User
 from app.core.dependencies import get_current_active_user, get_uow
 from app.core.errors import (
@@ -47,7 +47,7 @@ async def get_by_id(
 
 
 @router.post(
-    "/checkout", response_model=OrderResponse, status_code=status.HTTP_201_CREATED
+    "/checkout", response_model=CheckoutResponse, status_code=status.HTTP_201_CREATED
 )
 async def checkout_order(
     currency: str = Query(default="USD", min_length=3, max_length=3),
@@ -92,23 +92,23 @@ async def stripe_webhook(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid webhook signature"
         )
+    try:
+        event_type = event["type"]
+        if not isinstance(event_type, str):
+            return {"received": True}
+        allowed_events = {
+            "payment_intent.succeeded",
+            "payment_intent.payment_failed",
+        }  # ignoring all others boring events
+        if event_type not in allowed_events:
+            return {"received": True}  # for stripe is important status codes not json
 
-    event_type = event["type"]
-    if not isinstance(event_type, str):
-        return {"received": True}
-    allowed_events = {
-        "payment_intent.succeeded",
-        "payment_intent.payment_failed",
-    }  # ignoring all others boring events
-    if event_type not in allowed_events:
-        return {"received": True}  # for stripe is important status codes not json
-
-    data_object = cast(dict[str, Any], event["data"]["object"])
-
-    payment_intent_id = data_object.get(
-        "id"
-    )  # take payment intent id because we need to find order by it
-    if not isinstance(payment_intent_id, str):
+        payment_intent_id = event["data"]["object"][
+            "id"
+        ]  # take payment intent id because we need to find order by it
+        if not isinstance(payment_intent_id, str):
+            return {"received": True}
+    except (KeyError, TypeError):
         return {"received": True}
 
     await order_service.apply_payment_event(
