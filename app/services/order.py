@@ -1,4 +1,4 @@
-from stripe._error import StripeError
+from stripe import error
 from uuid import uuid4
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Any
@@ -14,6 +14,11 @@ from app.core.errors import (
     OrderCheckoutError,
     OrderEmptyCartError,
     OrderNotFoundError,
+    StripeRateLimitError,
+    StripeRequestError,
+    StripeAuthError,
+    StripeUnavalaibleError,
+    OrderPersistenceError,
 )
 
 
@@ -67,10 +72,24 @@ class OrderService:
                 raise OrderCheckoutError("PaymentIntent has no client_secret")
 
             return {"order": hydrated_order, "client_secret": client_secret}
-
-        except (SQLAlchemyError, StripeError) as e:
+        except error.RateLimitError as e:
             await uow.rollback()
-            raise OrderCheckoutError("Could not checkout") from e
+            raise StripeRateLimitError("Stripe rate limit") from e
+        except error.APIConnectionError as e:
+            await uow.rollback()
+            raise StripeUnavalaibleError("Stripe unvailable") from e
+        except error.AuthenticationError as e:
+            await uow.rollback()
+            raise StripeAuthError("Stripe auth failed") from e
+        except error.InvalidRequestError as e:
+            await uow.rollback()
+            raise StripeRequestError("Invalid Stripe request") from e
+        except error.StripeError as e:
+            await uow.rollback()
+            raise StripeUnavalaibleError("Stripe error") from e
+        except SQLAlchemyError as e:
+            await uow.rollback()
+            raise OrderPersistenceError("Database error") from e
 
     async def get_by_id(self, user_id: int, order_id: int, uow: UnitOfWork) -> Order:
         order_repo = OrderRepository(uow.session)

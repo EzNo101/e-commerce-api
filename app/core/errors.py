@@ -76,3 +76,23 @@ class OrderNotFoundError(AppError):
 
 class OrderAccessDeniedError(AppError):
     pass
+
+
+class StripeRateLimitError(AppError):
+    pass
+
+
+class StripeUnavalaibleError(AppError):
+    pass
+
+
+class StripeAuthError(AppError):
+    pass
+
+
+class StripeRequestError(AppError):
+    pass
+
+
+class OrderPersistenceError(AppError):
+    pass

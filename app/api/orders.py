@@ -1,6 +1,5 @@
+from typing import Any
 from fastapi import APIRouter, HTTPException, Depends, status, Query, Request, Header
-from typing import Any, cast
-
 from stripe import SignatureVerificationError
 
 from app.services.order import OrderService
@@ -9,10 +8,14 @@ from app.schemas.order import CheckoutResponse, OrderResponse
 from app.models.user import User
 from app.core.dependencies import get_current_active_user, get_uow
 from app.core.errors import (
-    OrderCheckoutError,
     OrderEmptyCartError,
     OrderNotFoundError,
     OrderAccessDeniedError,
+    OrderPersistenceError,
+    StripeAuthError,
+    StripeRateLimitError,
+    StripeRequestError,
+    StripeUnavalaibleError,
 )
 from app.db.uow import UnitOfWork
 
@@ -58,7 +61,21 @@ async def checkout_order(
         return await order_service.checkout_from_cart(current_user.id, uow, currency)
     except OrderEmptyCartError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except OrderCheckoutError as e:
+    except StripeRateLimitError as e:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(e)
+        )
+    except StripeUnavalaibleError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e)
+        )
+    except StripeAuthError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+    except StripeRequestError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except OrderPersistenceError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
