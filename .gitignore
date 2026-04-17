@@ -23,6 +23,7 @@ htmlcov/
 # Environment files
 .env
 .env.*
+!.env.example
 
 # Editor settings
 .vscode/
